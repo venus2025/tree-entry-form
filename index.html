@@ -143,6 +143,10 @@
       gap: 10px;
       flex-wrap: wrap;
     }
+    .button-group select {
+      padding: 10px;
+      border-radius: 6px;
+    }
     .button-group button {
       padding: 10px;
       font-size: 15px;
@@ -150,11 +154,11 @@
       border-radius: 6px;
       border: none;
     }
-    .button-group button:first-child {
+    .button-group button[type="button"]:first-of-type {
       background-color: #2e7d32;
       color: white;
     }
-    .button-group button:last-child {
+    .button-group button[type="button"]:last-of-type {
       background-color: #e53935;
       color: white;
     }
@@ -249,43 +253,35 @@
     <form id="treeForm">
       <label>Tree Name (Common)</label>
       <input type="text" placeholder="e.g., Neem">
-
       <label>Tree Name (Botanical)</label>
       <input type="text" placeholder="e.g., Azadirachta indica">
-
       <label class="half-width">Latitude</label>
       <label class="half-width">Longitude</label>
       <input type="text" class="half-width" placeholder="e.g., 12.9716">
       <input type="text" class="half-width" placeholder="e.g., 77.5946">
-
       <label>Environmental Benefits</label>
       <textarea rows="3" placeholder="e.g., Improves air quality, prevents erosion..."></textarea>
-
       <label>Medical Benefits</label>
       <textarea rows="3" placeholder="e.g., Used in Ayurveda, treats infections..."></textarea>
-
       <label>Tree Image</label>
       <input type="file" accept="image/*">
-
       <label>Leaf Image</label>
       <input type="file" accept="image/*">
-
       <label>Flower/Fruit Image</label>
       <input type="file" accept="image/*">
-
       <label>Species Classification</label>
       <input type="text" placeholder="e.g., Angiosperm, Dicot">
-
       <label>Uses of Tree</label>
       <textarea rows="3" placeholder="e.g., Medicinal, Timber, Shade..."></textarea>
-
       <div id="dynamic-fields"></div>
-
       <div class="button-group">
-        <button type="button" onclick="showDropdown()">Add Field ⬇</button>
-        <button type="button" onclick="deleteLastField()">❌ Delete Field</button>
+        <select id="fieldType">
+          <option value="image">Add Image</option>
+          <option value="data">Add Tree Data</option>
+        </select>
+        <button type="button" onclick="addField()">➕ Add Field</button>
+        <button type="button" onclick="deleteField()">❌ Delete Field</button>
       </div>
-
       <button type="submit">Submit & Generate QR Code</button>
     </form>
   </div>
@@ -298,45 +294,39 @@
     }
     let imageFieldCount = 3;
     let dataFieldCount = 0;
-
-    function showDropdown() {
-      const type = prompt('Add field type:\n1. Image\n2. Tree Data');
-      if (type === '1') addImageField();
-      else if (type === '2') addDataField();
+    function addField() {
+      const type = document.getElementById('fieldType').value;
+      const label = prompt(`Enter ${type === 'image' ? 'image' : 'data'} field name:`);
+      if (!label) return;
+      const div = document.createElement('div');
+      div.classList.add('dynamic-field-container');
+      if (type === 'image') {
+        if (imageFieldCount >= 10) {
+          alert('You can only add up to 10 image fields.');
+          return;
+        }
+        div.innerHTML = `<label>${label}</label><input type="file" accept="image/*" class="dynamic-field">`;
+        imageFieldCount++;
+      } else {
+        div.innerHTML = `<label>${label}</label><textarea rows="3" class="dynamic-field" placeholder="Enter ${label}..."></textarea>`;
+        dataFieldCount++;
+      }
+      document.getElementById('dynamic-fields').appendChild(div);
     }
-
-    function addImageField() {
-      if (imageFieldCount >= 10) {
-        alert('You can only add up to 10 image fields.');
+    function deleteField() {
+      const fields = document.querySelectorAll('.dynamic-field-container');
+      if (fields.length === 0) {
+        alert('No custom fields to delete.');
         return;
       }
-      const label = prompt('Enter image field name:');
-      if (!label) return;
-
-      const div = document.createElement('div');
-      div.innerHTML = `<label>${label}</label><input type="file" accept="image/*" class="dynamic-field">`;
-      document.getElementById('dynamic-fields').appendChild(div);
-      imageFieldCount++;
-    }
-
-    function addDataField() {
-      const label = prompt('Enter data field name:');
-      if (!label) return;
-
-      const div = document.createElement('div');
-      div.innerHTML = `<label>${label}</label><textarea rows="3" class="dynamic-field" placeholder="Enter ${label}..."></textarea>`;
-      document.getElementById('dynamic-fields').appendChild(div);
-      dataFieldCount++;
-    }
-
-    function deleteLastField() {
-      const container = document.getElementById('dynamic-fields');
-      const children = container.children;
-      if (children.length > 0) {
-        const last = children[children.length - 1];
-        if (last.querySelector('input[type="file"]')) imageFieldCount--;
+      const fieldNames = Array.from(fields).map((field, index) => `${index + 1}. ${field.querySelector('label').innerText}`);
+      const selectedIndex = prompt(`Select a field to delete:\n${fieldNames.join('\n')}`);
+      const index = parseInt(selectedIndex);
+      if (!isNaN(index) && index >= 1 && index <= fields.length) {
+        const toDelete = fields[index - 1];
+        if (toDelete.querySelector('input[type="file"]')) imageFieldCount--;
         else dataFieldCount--;
-        container.removeChild(last);
+        toDelete.remove();
       }
     }
   </script>
