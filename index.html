@@ -1,15 +1,84 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Tree Entry Form with QR Scanner</title>
+  <title>Survey App | Tree Entry</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
   <style>
     body {
+      margin: 0;
       font-family: 'Raleway', sans-serif;
       background-color: #e8f5e9;
       color: #1b4332;
+      overflow-x: hidden;
+    }
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: -250px;
+      height: 100%;
+      width: 250px;
+      background-color: #1a5e4d;
+      color: #e8f5e9;
+      transition: left 0.3s ease;
+      z-index: 999;
+      padding-top: 60px;
+    }
+    .sidebar.show {
+      left: 0;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+    }
+    .sidebar ul li {
+      padding: 15px 25px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      transition: background 0.2s;
+    }
+    .sidebar ul li i {
+      margin-right: 10px;
+      width: 20px;
+    }
+    .sidebar ul li:hover {
+      background-color: #388e3c;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background-color: #1a5e4d;
+      color: #e8f5e9;
+      padding: 12px 24px;
+      position: relative;
+      z-index: 1000;
+      flex-wrap: wrap;
+    }
+    .hamburger {
+      font-size: 24px;
+      cursor: pointer;
+      margin-right: 20px;
+    }
+    .header .logo-container {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .header img {
+      height: 40px;
+      margin-right: 15px;
+    }
+    .header .title {
+      font-size: 22px;
+      font-weight: 500;
+    }
+    .header .user {
+      font-size: 14px;
+      opacity: 0.9;
+      margin-top: 8px;
     }
     .form-container {
       max-width: 850px;
@@ -18,19 +87,83 @@
       padding: 30px;
       border-radius: 14px;
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+      border-top: 5px solid #1a5e4d;
+      animation: fadeSlideIn 0.8s ease-out forwards;
+      opacity: 0;
+    }
+    @keyframes fadeSlideIn {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    h2 {
+      color: #2e7d32;
+      text-align: center;
+      margin-bottom: 25px;
+    }
+    form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
     }
     label {
       font-weight: 600;
+      color: #1b4332;
+      grid-column: span 2;
     }
-    input, textarea, select {
+    input, select, textarea {
       padding: 10px;
+      border: 1px solid #a5d6a7;
+      border-radius: 6px;
+      background-color: #f1f8e9;
       width: 100%;
       box-sizing: border-box;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-      background-color: #f1f8e9;
+      grid-column: span 2;
+      transition: all 0.3s ease;
     }
-    button {
+    input:hover, select:hover, textarea:hover,
+    input:focus, select:focus, textarea:focus {
+      background-color: #e0f2f1;
+      border-color: #66bb6a;
+    }
+    .half-width {
+      grid-column: span 1;
+    }
+    textarea {
+      resize: vertical;
+    }
+    .button-group {
+      grid-column: span 2;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .button-group select {
+      padding: 10px;
+      border-radius: 6px;
+    }
+    .button-group button {
+      padding: 10px;
+      font-size: 15px;
+      cursor: pointer;
+      border-radius: 6px;
+      border: none;
+    }
+    .button-group button[type="button"]:first-of-type {
+      background-color: #2e7d32;
+      color: white;
+    }
+    .button-group button[type="button"]:last-of-type {
+      background-color: #e53935;
+      color: white;
+    }
+    button[type="submit"] {
+      grid-column: span 2;
       padding: 12px;
       background-color: #388e3c;
       color: white;
@@ -38,64 +171,163 @@
       border-radius: 6px;
       font-size: 16px;
       cursor: pointer;
+      transition: transform 0.3s ease, background-color 0.3s ease;
     }
-    #reader {
-      width: 100%;
-      margin-top: 20px;
+    button[type="submit"]:hover {
+      background-color: #2e7d32;
+      transform: translateY(-2px);
+    }
+    .footer {
+      background-color: #c8e6c9;
+      color: #1b4332;
+      text-align: center;
+      padding: 15px;
+      margin-top: 40px;
+      font-size: 14px;
+    }
+    @media (max-width: 768px) {
+      form {
+        grid-template-columns: 1fr;
+      }
+      .half-width {
+        grid-column: span 1;
+      }
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .header .logo-container {
+        flex-direction: row;
+        align-items: center;
+      }
+      .header .user {
+        margin-left: 10px;
+      }
+      .sidebar {
+        width: 200px;
+      }
+      .form-container {
+        margin: 20px;
+        padding: 20px;
+      }
+    }
+    @media (max-width: 480px) {
+      .header .title {
+        font-size: 18px;
+      }
+      button {
+        font-size: 14px;
+      }
+      input, textarea {
+        font-size: 14px;
+      }
+      .sidebar {
+        width: 180px;
+      }
+      .sidebar ul li {
+        padding: 12px 18px;
+      }
     }
   </style>
 </head>
 <body>
+  <div class="sidebar" id="sidebar">
+    <ul>
+      <li><i class="fas fa-home"></i> Home</li>
+      <li><i class="fas fa-tree"></i> Tree Entries</li>
+      <li><i class="fas fa-qrcode"></i> QR Codes</li>
+      <li><i class="fas fa-user"></i> Profile</li>
+      <li><i class="fas fa-sign-out-alt"></i> Logout</li>
+    </ul>
+  </div>
+  <div class="header">
+    <div class="logo-container">
+      <span class="hamburger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></span>
+      <img src="https://greencircleorg.wordpress.com/wp-content/uploads/2023/09/cropped-gc-png-file-2022.png?w=730" alt="Survey Logo">
+      <div class="title">Volunteer Tree Entry Dashboard</div>
+    </div>
+    <div class="user">Logged in as: volunteer@example.com</div>
+  </div>
   <div class="form-container">
-    <h2>Scan QR Code or Enter Tree ID</h2>
+    <h2>Tree Information Entry</h2>
     <form id="treeForm">
-      <label>QR Code / Tree ID</label>
-      <input type="text" id="qr-result" placeholder="Scan or type QR code here">
-      <button type="button" onclick="startScan()">📷 Scan QR Code</button>
-      <div id="reader"></div>
-      <label for="camera-select">Select Camera:</label>
-      <select id="camera-select"></select>
+      <label>Tree Name (Common)</label>
+      <input type="text" placeholder="e.g., Neem">
+      <label>Tree Name (Botanical)</label>
+      <input type="text" placeholder="e.g., Azadirachta indica">
+      <label class="half-width">Latitude</label>
+      <label class="half-width">Longitude</label>
+      <input type="text" class="half-width" placeholder="e.g., 12.9716">
+      <input type="text" class="half-width" placeholder="e.g., 77.5946">
+      <label>Environmental Benefits</label>
+      <textarea rows="3" placeholder="e.g., Improves air quality, prevents erosion..."></textarea>
+      <label>Medical Benefits</label>
+      <textarea rows="3" placeholder="e.g., Used in Ayurveda, treats infections..."></textarea>
+      <label>Tree Image</label>
+      <input type="file" accept="image/*">
+      <label>Leaf Image</label>
+      <input type="file" accept="image/*">
+      <label>Flower/Fruit Image</label>
+      <input type="file" accept="image/*">
+      <label>Species Classification</label>
+      <input type="text" placeholder="e.g., Angiosperm, Dicot">
+      <label>Uses of Tree</label>
+      <textarea rows="3" placeholder="e.g., Medicinal, Timber, Shade..."></textarea>
+      <div id="dynamic-fields"></div>
+      <div class="button-group">
+        <select id="fieldType">
+          <option value="image">Add Image</option>
+          <option value="data">Add Tree Data</option>
+        </select>
+        <button type="button" onclick="addField()">➕ Add Field</button>
+        <button type="button" onclick="deleteField()">❌ Delete Field</button>
+      </div>
+      <button type="submit">Submit & Generate QR Code</button>
     </form>
   </div>
-
+  <div class="footer">
+    &copy; 2025 GreenCircle Initiative. All Rights Reserved.
+  </div>
   <script>
-    const qrResultInput = document.getElementById("qr-result");
-    const readerDiv = document.getElementById("reader");
-    const cameraSelect = document.getElementById("camera-select");
-    const html5QrCode = new Html5Qrcode("reader");
-
-    function startScan() {
-      Html5Qrcode.getCameras().then(devices => {
-        if (devices && devices.length) {
-          cameraSelect.innerHTML = devices.map((device, index) =>
-            `<option value="${device.id}">${device.label || `Camera ${index+1}`}</option>`
-          ).join("");
-
-          // Start scanning with the selected camera
-          cameraSelect.addEventListener("change", () => {
-            html5QrCode.stop();
-            startQRCodeScanner(cameraSelect.value);
-          });
-
-          startQRCodeScanner(devices[0].id); // Default to first camera
-        }
-      }).catch(err => {
-        console.error("Camera not found", err);
-      });
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('show');
     }
-
-    function startQRCodeScanner(cameraId) {
-      html5QrCode.start(
-        cameraId,
-        { fps: 10, qrbox: { width: 250, height: 250 } },
-        qrCodeMessage => {
-          qrResultInput.value = qrCodeMessage;
-          html5QrCode.stop();
-        },
-        errorMessage => {
-          console.warn(`QR Scan error: ${errorMessage}`);
+    let imageFieldCount = 3;
+    let dataFieldCount = 0;
+    function addField() {
+      const type = document.getElementById('fieldType').value;
+      const label = prompt(`Enter ${type === 'image' ? 'image' : 'data'} field name:`);
+      if (!label) return;
+      const div = document.createElement('div');
+      div.classList.add('dynamic-field-container');
+      if (type === 'image') {
+        if (imageFieldCount >= 10) {
+          alert('You can only add up to 10 image fields.');
+          return;
         }
-      );
+        div.innerHTML = `<label>${label}</label><input type="file" accept="image/*" class="dynamic-field">`;
+        imageFieldCount++;
+      } else {
+        div.innerHTML = `<label>${label}</label><textarea rows="3" class="dynamic-field" placeholder="Enter ${label}..."></textarea>`;
+        dataFieldCount++;
+      }
+      document.getElementById('dynamic-fields').appendChild(div);
+    }
+    function deleteField() {
+      const fields = document.querySelectorAll('.dynamic-field-container');
+      if (fields.length === 0) {
+        alert('No custom fields to delete.');
+        return;
+      }
+      const fieldNames = Array.from(fields).map((field, index) => `${index + 1}. ${field.querySelector('label').innerText}`);
+      const selectedIndex = prompt(`Select a field to delete:\n${fieldNames.join('\n')}`);
+      const index = parseInt(selectedIndex);
+      if (!isNaN(index) && index >= 1 && index <= fields.length) {
+        const toDelete = fields[index - 1];
+        if (toDelete.querySelector('input[type="file"]')) imageFieldCount--;
+        else dataFieldCount--;
+        toDelete.remove();
+      }
     }
   </script>
 </body>
