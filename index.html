@@ -8,45 +8,8 @@
   <style>
     body {
       font-family: 'Raleway', sans-serif;
-      margin: 0;
       background-color: #e8f5e9;
       color: #1b4332;
-    }
-    .sidebar {
-      position: fixed;
-      top: 0;
-      left: -250px;
-      height: 100%;
-      width: 250px;
-      background-color: #1a5e4d;
-      color: #e8f5e9;
-      transition: left 0.3s ease;
-      z-index: 999;
-      padding-top: 60px;
-    }
-    .sidebar.show {
-      left: 0;
-    }
-    .sidebar ul {
-      list-style: none;
-      padding: 0;
-    }
-    .sidebar ul li {
-      padding: 15px 25px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-    }
-    .sidebar ul li i {
-      margin-right: 10px;
-    }
-    .header {
-      display: flex;
-      justify-content: space-between;
-      background-color: #1a5e4d;
-      color: #e8f5e9;
-      padding: 12px 24px;
-      align-items: center;
     }
     .form-container {
       max-width: 850px;
@@ -56,26 +19,18 @@
       border-radius: 14px;
       box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
     }
-    form {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
     label {
-      grid-column: span 2;
       font-weight: 600;
     }
-    input, textarea {
+    input, textarea, select {
       padding: 10px;
       width: 100%;
       box-sizing: border-box;
       border-radius: 6px;
       border: 1px solid #ccc;
       background-color: #f1f8e9;
-      grid-column: span 2;
     }
     button {
-      grid-column: span 2;
       padding: 12px;
       background-color: #388e3c;
       color: white;
@@ -86,35 +41,11 @@
     }
     #reader {
       width: 100%;
-      margin-bottom: 20px;
-      display: none;
-    }
-    .disabled-field {
-      opacity: 0.5;
-      pointer-events: none;
+      margin-top: 20px;
     }
   </style>
 </head>
 <body>
-  <div class="sidebar" id="sidebar">
-    <ul>
-      <li><i class="fas fa-home"></i> Home</li>
-      <li><i class="fas fa-tree"></i> Tree Entries</li>
-      <li><i class="fas fa-qrcode"></i> QR Codes</li>
-      <li><i class="fas fa-user"></i> Profile</li>
-      <li><i class="fas fa-sign-out-alt"></i> Logout</li>
-    </ul>
-  </div>
-
-  <div class="header">
-    <div class="logo-container">
-      <span class="hamburger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></span>
-      <img src="https://greencircleorg.wordpress.com/wp-content/uploads/2023/09/cropped-gc-png-file-2022.png?w=730" alt="Logo" style="height: 40px; margin-right: 15px;">
-      <span class="title">Volunteer Tree Entry Dashboard</span>
-    </div>
-    <div class="user">Logged in as: volunteer@example.com</div>
-  </div>
-
   <div class="form-container">
     <h2>Scan QR Code or Enter Tree ID</h2>
     <form id="treeForm">
@@ -122,78 +53,50 @@
       <input type="text" id="qr-result" placeholder="Scan or type QR code here">
       <button type="button" onclick="startScan()">📷 Scan QR Code</button>
       <div id="reader"></div>
-
-      <div id="treeDetails" class="disabled-field">
-        <label>Tree Name (Common)</label>
-        <input type="text" placeholder="e.g., Neem">
-        <label>Tree Name (Botanical)</label>
-        <input type="text" placeholder="e.g., Azadirachta indica">
-        <label>Latitude</label>
-        <input type="text" placeholder="e.g., 12.9716">
-        <label>Longitude</label>
-        <input type="text" placeholder="e.g., 77.5946">
-        <label>Environmental Benefits</label>
-        <textarea rows="3" placeholder="e.g., Improves air quality..."></textarea>
-        <label>Medical Benefits</label>
-        <textarea rows="3" placeholder="e.g., Used in Ayurveda..."></textarea>
-        <label>Tree Image</label>
-        <input type="file" accept="image/*">
-        <label>Leaf Image</label>
-        <input type="file" accept="image/*">
-        <label>Flower/Fruit Image</label>
-        <input type="file" accept="image/*">
-        <label>Species Classification</label>
-        <input type="text" placeholder="e.g., Angiosperm, Dicot">
-        <label>Uses of Tree</label>
-        <textarea rows="3" placeholder="e.g., Medicinal, Timber, Shade..."></textarea>
-      </div>
-
-      <button type="submit">📤 Submit Tree Entry</button>
+      <label for="camera-select">Select Camera:</label>
+      <select id="camera-select"></select>
     </form>
   </div>
 
   <script>
-function startScan() {
-  readerDiv.style.display = "block";
-  
-  Html5Qrcode.getCameras().then(devices => {
-    if (devices && devices.length) {
-      let cameraOptions = devices.map((device, index) => 
-        `<option value="${device.id}">${device.label || `Camera ${index+1}`}</option>`
-      ).join("");
+    const qrResultInput = document.getElementById("qr-result");
+    const readerDiv = document.getElementById("reader");
+    const cameraSelect = document.getElementById("camera-select");
+    const html5QrCode = new Html5Qrcode("reader");
 
-      const cameraSelector = document.createElement("select");
-      cameraSelector.innerHTML = cameraOptions;
-      document.body.appendChild(cameraSelector);
+    function startScan() {
+      Html5Qrcode.getCameras().then(devices => {
+        if (devices && devices.length) {
+          cameraSelect.innerHTML = devices.map((device, index) =>
+            `<option value="${device.id}">${device.label || `Camera ${index+1}`}</option>`
+          ).join("");
 
-      cameraSelector.addEventListener("change", () => {
-        html5QrCode.stop();
-        startQRCodeScanner(cameraSelector.value);
+          // Start scanning with the selected camera
+          cameraSelect.addEventListener("change", () => {
+            html5QrCode.stop();
+            startQRCodeScanner(cameraSelect.value);
+          });
+
+          startQRCodeScanner(devices[0].id); // Default to first camera
+        }
+      }).catch(err => {
+        console.error("Camera not found", err);
       });
-
-      // Start with the first available camera
-      startQRCodeScanner(devices[0].id);
     }
-  }).catch(err => {
-    console.error("Camera not found", err);
-  });
-}
 
-function startQRCodeScanner(cameraId) {
-  html5QrCode.start(
-    cameraId,
-    { fps: 10, qrbox: { width: 250, height: 250 } },
-    qrCodeMessage => {
-      qrResultInput.value = qrCodeMessage;
-      treeDetails.classList.remove("disabled-field");
-      html5QrCode.stop();
-      readerDiv.style.display = "none";
-    },
-    errorMessage => {
-      console.warn(`QR Scan error: ${errorMessage}`);
+    function startQRCodeScanner(cameraId) {
+      html5QrCode.start(
+        cameraId,
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        qrCodeMessage => {
+          qrResultInput.value = qrCodeMessage;
+          html5QrCode.stop();
+        },
+        errorMessage => {
+          console.warn(`QR Scan error: ${errorMessage}`);
+        }
+      );
     }
-  );
-}
   </script>
 </body>
 </html>
