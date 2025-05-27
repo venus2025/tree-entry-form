@@ -153,46 +153,47 @@
   </div>
 
   <script>
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('show');
-    }
+function startScan() {
+  readerDiv.style.display = "block";
+  
+  Html5Qrcode.getCameras().then(devices => {
+    if (devices && devices.length) {
+      let cameraOptions = devices.map((device, index) => 
+        `<option value="${device.id}">${device.label || `Camera ${index+1}`}</option>`
+      ).join("");
 
-    const qrResultInput = document.getElementById("qr-result");
-    const treeDetails = document.getElementById("treeDetails");
-    const readerDiv = document.getElementById("reader");
-    const html5QrCode = new Html5Qrcode("reader");
+      const cameraSelector = document.createElement("select");
+      cameraSelector.innerHTML = cameraOptions;
+      document.body.appendChild(cameraSelector);
 
-    qrResultInput.addEventListener('input', () => {
-      if (qrResultInput.value.trim() !== '') {
-        treeDetails.classList.remove('disabled-field');
-      } else {
-        treeDetails.classList.add('disabled-field');
-      }
-    });
-
-    function startScan() {
-      readerDiv.style.display = "block";
-      Html5Qrcode.getCameras().then(devices => {
-        if (devices && devices.length) {
-          const cameraId = devices[0].id;
-          html5QrCode.start(
-            cameraId,
-            { fps: 10, qrbox: { width: 250, height: 250 } },
-            qrCodeMessage => {
-              qrResultInput.value = qrCodeMessage;
-              treeDetails.classList.remove('disabled-field');
-              html5QrCode.stop();
-              readerDiv.style.display = "none";
-            },
-            errorMessage => {
-              console.warn(`QR Scan error: ${errorMessage}`);
-            }
-          );
-        }
-      }).catch(err => {
-        console.error('Camera not found', err);
+      cameraSelector.addEventListener("change", () => {
+        html5QrCode.stop();
+        startQRCodeScanner(cameraSelector.value);
       });
+
+      // Start with the first available camera
+      startQRCodeScanner(devices[0].id);
     }
+  }).catch(err => {
+    console.error("Camera not found", err);
+  });
+}
+
+function startQRCodeScanner(cameraId) {
+  html5QrCode.start(
+    cameraId,
+    { fps: 10, qrbox: { width: 250, height: 250 } },
+    qrCodeMessage => {
+      qrResultInput.value = qrCodeMessage;
+      treeDetails.classList.remove("disabled-field");
+      html5QrCode.stop();
+      readerDiv.style.display = "none";
+    },
+    errorMessage => {
+      console.warn(`QR Scan error: ${errorMessage}`);
+    }
+  );
+}
   </script>
 </body>
 </html>
